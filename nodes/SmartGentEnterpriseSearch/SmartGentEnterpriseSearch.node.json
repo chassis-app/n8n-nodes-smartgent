@@ -1,0 +1,10 @@
+{
+	"node": "dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearch.node.js",
+	"credentials": [
+		{
+			"name": "smartGentApi",
+			"displayName": "SmartGent API",
+			"documentationUrl": "https://docs.smartgent.ai/api"
+		}
+	]
+} 

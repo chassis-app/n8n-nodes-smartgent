@@ -9,15 +9,29 @@
     "automation",
     "intelligent-workflows"
   ],
-  "license": "MIT",
-  "homepage": "https://github.com/smartgent/n8n-nodes-smartgent",
-  "author": {
-    "name": "SmartGent",
-    "email": ""
-  },
+  	"license": "MIT",
+	"homepage": "https://github.com/chassis-app/n8n-nodes-smartgent",
+	"author": {
+		"name": "Max Cheung",
+		"email": "max.cheung@jarvisnsam.ai"
+	},
+	"keywords": [
+		"n8n",
+		"n8n-nodes",
+		"n8n-community-nodes",
+		"smartgent",
+		"enterprise-search",
+		"ai",
+		"chatbot",
+		"automation",
+		"workflow",
+		"search",
+		"langchain",
+		"tool"
+	],
   "repository": {
     "type": "git",
-    "url": "https://github.com/smartgent/n8n-nodes-smartgent.git"
+    "url": "https://github.com/chassis-app/n8n-nodes-smartgent.git"
   },
   "engines": {
     "node": ">=20.15"
@@ -29,22 +43,21 @@
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
-    "prepublishOnly": "npm build && npm lint -c .eslintrc.prepublish.js nodes credentials package.json"
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
   },
   "files": [
     "dist"
   ],
-  "n8n": {
-    "n8nNodesApiVersion": 1,
-    "credentials": [
-      "dist/credentials/ExampleCredentialsApi.credentials.js",
-      "dist/credentials/HttpBinApi.credentials.js"
-    ],
-    "nodes": [
-      "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
-    ]
-  },
+  	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"credentials": [
+			"dist/credentials/SmartGentApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearch.node.js",
+			"dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearchTool.node.js"
+		]
+	},
   "devDependencies": {
     "@typescript-eslint/parser": "~8.32.0",
     "eslint": "^8.57.0",
