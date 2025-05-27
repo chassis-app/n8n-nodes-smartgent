@@ -160,7 +160,7 @@ export class SmartGentEnterpriseSearch implements INodeType {
 
 					if (response.success && Array.isArray(response.result)) {
 						return response.result.map((chatbot: any) => ({
-							name: `${chatbot.name} - ${chatbot.description}`,
+							name: chatbot.name,
 							value: chatbot.guid,
 						}));
 					}

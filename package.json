@@ -1,34 +1,29 @@
 {
   "name": "n8n-nodes-smartgent",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "SmartGent custom nodes for n8n - AI-powered automation and intelligent workflow integrations",
   "keywords": [
     "n8n-community-node-package",
+    "n8n",
+    "n8n-nodes",
+    "n8n-community-nodes",
     "smartgent",
+    "enterprise-search",
     "ai",
+    "chatbot",
     "automation",
+    "workflow",
+    "search",
+    "langchain",
+    "tool",
     "intelligent-workflows"
   ],
-  	"license": "MIT",
-	"homepage": "https://github.com/chassis-app/n8n-nodes-smartgent",
-	"author": {
-		"name": "Max Cheung",
-		"email": "max.cheung@jarvisnsam.ai"
-	},
-	"keywords": [
-		"n8n",
-		"n8n-nodes",
-		"n8n-community-nodes",
-		"smartgent",
-		"enterprise-search",
-		"ai",
-		"chatbot",
-		"automation",
-		"workflow",
-		"search",
-		"langchain",
-		"tool"
-	],
+  "license": "MIT",
+  "homepage": "https://github.com/chassis-app/n8n-nodes-smartgent",
+  "author": {
+    "name": "Max Cheung",
+    "email": "max.cheung@jarvisnsam.ai"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/chassis-app/n8n-nodes-smartgent.git"
