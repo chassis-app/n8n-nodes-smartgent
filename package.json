@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-smartgent",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "SmartGent custom nodes for n8n - AI-powered automation and intelligent workflow integrations",
   "keywords": [
     "n8n-community-node-package",
@@ -43,16 +43,16 @@
   "files": [
     "dist"
   ],
-  	"n8n": {
-		"n8nNodesApiVersion": 1,
-		"credentials": [
-			"dist/credentials/SmartGentApi.credentials.js"
-		],
-		"nodes": [
-			"dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearch.node.js",
-			"dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearchTool.node.js"
-		]
-	},
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/SmartGentApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearch.node.js",
+      "dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearchTool.node.js"
+    ]
+  },
   "devDependencies": {
     "@typescript-eslint/parser": "~8.32.0",
     "eslint": "^8.57.0",
