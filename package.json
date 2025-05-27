@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-smartgent",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "SmartGent custom nodes for n8n - AI-powered automation and intelligent workflow integrations",
   "keywords": [
     "n8n-community-node-package",
