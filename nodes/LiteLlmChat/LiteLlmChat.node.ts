@@ -1,6 +1,5 @@
 import type {
 	IExecuteFunctions,
-	IHttpRequestOptions,
 	ILoadOptionsFunctions,
 	INodeExecutionData,
 	INodePropertyOptions,
@@ -11,6 +10,8 @@ import type {
 import { NodeConnectionType } from 'n8n-workflow';
 
 import { NodeOperationError } from 'n8n-workflow';
+
+import OpenAI from 'openai';
 
 export class LiteLlmChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -221,17 +222,13 @@ export class LiteLlmChat implements INodeType {
 			async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				try {
 					const credentials = await this.getCredentials('smartGentLiteLlmApi');
-					const options: IHttpRequestOptions = {
-						method: 'GET',
-						url: `${credentials.baseUrl}/v1/models`,
-						headers: {
-							'Authorization': `Bearer ${credentials.apiKey}`,
-							'Accept': 'application/json',
-						},
-						json: true,
-					};
+					
+					const openai = new OpenAI({
+						baseURL: `${credentials.baseUrl}/v1`,
+						apiKey: credentials.apiKey as string,
+					});
 
-					const response = await this.helpers.httpRequest(options);
+					const response = await openai.models.list();
 
 					const models = response.data || [];
 					return models.map((model: any) => ({
@@ -260,60 +257,57 @@ export class LiteLlmChat implements INodeType {
 					const messagesInput = this.getNodeParameter('messages.values', i, []) as any[];
 					const responseFormat = this.getNodeParameter('responseFormat', i) as string;
 
-					// Format messages according to the API structure
-					const messages = messagesInput.map((message) => {
+					const credentials = await this.getCredentials('smartGentLiteLlmApi');
+					
+					const openai = new OpenAI({
+						baseURL: `${credentials.baseUrl}/v1`,
+						apiKey: credentials.apiKey as string,
+					});
+
+					// Format messages according to the OpenAI API structure
+					const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = messagesInput.map((message) => {
 						if (message.contentType === 'text') {
 							return {
-								role: message.role,
+								role: message.role as 'system' | 'user' | 'assistant',
 								content: message.text,
 							};
 						} else if (message.contentType === 'mixed') {
 							return {
-								role: message.role,
+								role: message.role as 'system' | 'user' | 'assistant',
 								content: [
 									{
 										type: 'text',
 										text: message.promptText,
 									},
 									{
-										type: 'file',
-										file: {
-											file_id: message.fileUrl,
+										type: 'image_url',
+										image_url: {
+											url: message.fileUrl,
 										},
 									},
 								],
 							};
 						}
-						return message;
+						return {
+							role: message.role as 'system' | 'user' | 'assistant',
+							content: message.text || '',
+						};
 					});
 
-					const body: any = {
+					const completionParams: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
 						model,
 						messages,
 					};
 
 					// Add response_format if JSON object is selected
 					if (responseFormat === 'json_object') {
-						body.response_format = { type: 'json_object' };
+						completionParams.response_format = { type: 'json_object' };
 					}
 
-					const credentials = await this.getCredentials('smartGentLiteLlmApi');
-					const options: IHttpRequestOptions = {
-						method: 'POST',
-						url: `${credentials.baseUrl}/v1/chat/completions`,
-						headers: {
-							'Authorization': `Bearer ${credentials.apiKey}`,
-							'Content-Type': 'application/json',
-							'Accept': 'application/json',
-						},
-						body,
-						json: true,
-					};
-
-					const response = await this.helpers.httpRequest(options);
+					const response = await openai.chat.completions.create(completionParams);
 
 					returnData.push({
-						json: response,
+						json: JSON.parse(JSON.stringify(response)),
 						pairedItem: {
 							item: i,
 						},
