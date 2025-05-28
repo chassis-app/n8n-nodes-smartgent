@@ -1,0 +1,10 @@
+{
+	"node": "dist/nodes/SmartgentMinio/SmartgentMinio.node.js",
+	"credentials": [
+		{
+			"name": "s3MinIO",
+			"displayName": "S3/MinIO",
+			"documentationUrl": "https://docs.aws.amazon.com/s3/"
+		}
+	]
+} 

@@ -1,22 +1,24 @@
 # 🤖 n8n-nodes-smartgent
 
-**SmartGent Custom Nodes for n8n** - AI-powered enterprise search automation for your workflows.
+**SmartGent Custom Nodes for n8n** - AI-powered automation and intelligent workflow integrations including LiteLLM chat completions and S3/MinIO file storage.
 
 [![npm version](https://badge.fury.io/js/n8n-nodes-smartgent.svg)](https://badge.fury.io/js/n8n-nodes-smartgent)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Overview
 
-SmartGent brings intelligent enterprise search capabilities to your n8n workflows. Search through your organization's knowledge base using AI-powered chatbots and integrate the results seamlessly into your automation workflows.
+SmartGent brings intelligent enterprise search capabilities, AI chat completions, and cloud storage integration to your n8n workflows. Search through your organization's knowledge base using AI-powered chatbots, interact with LLM models, and manage file storage seamlessly.
 
 ## ✨ Features
 
 - 🧠 **AI-Powered Enterprise Search** - Intelligent search through enterprise knowledge bases
 - 🤖 **Dynamic Chatbot Selection** - Choose from available enterprise chatbots
-- 🔧 **Two Node Types** - Regular workflow node and AI Agent tool version
-- 🛡️ **Secure Authentication** - API key-based authentication with configurable base URL
+- 💬 **LiteLLM Chat Completions** - Interact with various LLM models through LiteLLM API
+- 📁 **SmartGent MinIO File Storage** - Upload files and generate presigned URLs for S3/MinIO
+- 🔧 **Multiple Node Types** - Regular workflow nodes and AI Agent tool versions
+- 🛡️ **Secure Authentication** - API key-based authentication with configurable base URLs
 - 📊 **Rich Response Data** - Structured results with source attribution and metadata
-- 🎯 **AI Agent Compatible** - Tool version works seamlessly with n8n AI Agent nodes
+- 🎯 **AI Agent Compatible** - Tool versions work seamlessly with n8n AI Agent nodes
 
 ## 📦 Installation
 
@@ -46,6 +48,30 @@ AI Agent tool version for automated searches initiated by AI agents.
 - Automatically called by AI Agent nodes
 - Returns formatted text optimized for AI consumption
 - Same search capabilities as the main node
+
+### LiteLLM Chat
+Interact with various LLM models through the LiteLLM API.
+
+**Features:**
+- Support for multiple LLM providers
+- Text and mixed content (text + files) support
+- Dynamic model selection
+- Streaming and non-streaming responses
+
+### SmartGent MinIO
+Comprehensive file storage solution for S3 and MinIO-compatible services.
+
+**Operations:**
+- **Upload File** - Upload binary or text files to buckets
+- **Generate Presigned URL** - Create time-limited access URLs
+- **Upload and Get Presigned URL** - Combined operation for efficiency
+
+**Features:**
+- Support for AWS S3 and MinIO
+- Binary and text file uploads
+- Custom metadata and headers
+- Configurable expiration times
+- Path-style and virtual-hosted-style URLs
 
 ## ⚙️ Configuration
 
