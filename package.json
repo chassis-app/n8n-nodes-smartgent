@@ -46,11 +46,13 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/SmartGentApi.credentials.js"
+      "dist/credentials/SmartGentApi.credentials.js",
+      "dist/credentials/SmartGentLiteLlmApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearch.node.js",
-      "dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearchTool.node.js"
+      "dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearchTool.node.js",
+      "dist/nodes/LiteLlmChat/LiteLlmChat.node.js"
     ]
   },
   "devDependencies": {

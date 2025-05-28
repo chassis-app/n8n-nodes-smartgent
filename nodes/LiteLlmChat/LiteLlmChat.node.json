@@ -1,0 +1,9 @@
+{
+	"node": "dist/nodes/LiteLlmChat/LiteLlmChat.node.js",
+	"credentials": [
+		{
+			"name": "smartGentLiteLlmApi",
+			"required": true
+		}
+	]
+} 
