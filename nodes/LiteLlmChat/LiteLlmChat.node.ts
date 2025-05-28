@@ -81,6 +81,7 @@ export class LiteLlmChat implements INodeType {
 					{
 						name: 'values',
 						displayName: 'Message',
+						// eslint-disable-next-line n8n-nodes-base/node-param-fixed-collection-type-unsorted-items
 						values: [
 							{
 								displayName: 'Role',
@@ -179,7 +180,7 @@ export class LiteLlmChat implements INodeType {
 									},
 								},
 							},
-					],
+						],
 					},
 				],
 				displayOptions: {
