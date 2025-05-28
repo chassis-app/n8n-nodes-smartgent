@@ -189,6 +189,30 @@ export class LiteLlmChat implements INodeType {
 					},
 				},
 			},
+			{
+				displayName: 'Response Format',
+				name: 'responseFormat',
+				type: 'options',
+				options: [
+					{
+						name: 'Default',
+						value: 'default',
+						description: 'Default response format',
+					},
+					{
+						name: 'JSON Object',
+						value: 'json_object',
+						description: 'Force the response to be a valid JSON object',
+					},
+				],
+				default: 'default',
+				description: 'The format of the response',
+				displayOptions: {
+					show: {
+						operation: ['chatCompletion'],
+					},
+				},
+			},
 		],
 	};
 
@@ -234,6 +258,7 @@ export class LiteLlmChat implements INodeType {
 				if (operation === 'chatCompletion') {
 					const model = this.getNodeParameter('model', i) as string;
 					const messagesInput = this.getNodeParameter('messages.values', i, []) as any[];
+					const responseFormat = this.getNodeParameter('responseFormat', i) as string;
 
 					// Format messages according to the API structure
 					const messages = messagesInput.map((message) => {
@@ -262,10 +287,15 @@ export class LiteLlmChat implements INodeType {
 						return message;
 					});
 
-					const body = {
+					const body: any = {
 						model,
 						messages,
 					};
+
+					// Add response_format if JSON object is selected
+					if (responseFormat === 'json_object') {
+						body.response_format = { type: 'json_object' };
+					}
 
 					const credentials = await this.getCredentials('smartGentLiteLlmApi');
 					const options: IHttpRequestOptions = {
