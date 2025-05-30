@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-smartgent",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "description": "SmartGent custom nodes for n8n - AI-powered automation and intelligent workflow integrations including LiteLLM chat completions",
   "keywords": [
     "n8n-community-node-package",
@@ -55,7 +55,7 @@
     "nodes": [
       "dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearch.node.js",
       "dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearchTool.node.js",
-      "dist/nodes/LiteLlmChat/LiteLlmChat.node.js",
+      "dist/nodes/SmartgentChat/SmartgentChat.node.js",
       "dist/nodes/SmartgentMinio/SmartgentMinio.node.js"
     ]
   },

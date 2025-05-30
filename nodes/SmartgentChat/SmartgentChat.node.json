@@ -1,5 +1,5 @@
 {
-	"node": "dist/nodes/LiteLlmChat/LiteLlmChat.node.js",
+	"node": "dist/nodes/SmartgentChat/SmartgentChat.node.js",
 	"credentials": [
 		{
 			"name": "smartGentLiteLlmApi",

@@ -13,17 +13,17 @@ import { NodeOperationError } from 'n8n-workflow';
 
 import OpenAI from 'openai';
 
-export class LiteLlmChat implements INodeType {
+export class SmartgentChat implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'LiteLLM Chat',
-		name: 'liteLlmChat',
+		displayName: 'SmartGent Chat',
+		name: 'smartgentChat',
 		icon: 'file:smartgent.svg',
 		group: ['ai'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["model"]}}',
-		description: 'Interact with LiteLLM chat completions API',
+		description: 'Interact with SmartGent chat completions API',
 		defaults: {
-			name: 'LiteLLM Chat',
+			name: 'SmartGent Chat',
 		},
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
@@ -214,6 +214,48 @@ export class LiteLlmChat implements INodeType {
 					},
 				},
 			},
+			{
+				displayName: 'Enable Thinking',
+				name: 'enableThinking',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to enable thinking mode with budget tokens',
+				displayOptions: {
+					show: {
+						operation: ['chatCompletion'],
+					},
+				},
+			},
+			{
+				displayName: 'Budget Tokens',
+				name: 'budgetTokens',
+				type: 'number',
+				default: 0,
+				description: 'The maximum number of tokens to use for thinking',
+				displayOptions: {
+					show: {
+						operation: ['chatCompletion'],
+						enableThinking: [true],
+					},
+				},
+			},
+			{
+				displayName: 'Temperature',
+				name: 'temperature',
+				type: 'number',
+				default: 0,
+				typeOptions: {
+					minValue: 0,
+					maxValue: 2,
+					numberStepSize: 0.1,
+				},
+				description: 'Controls randomness in the response. 0 = deterministic, 2 = very random.',
+				displayOptions: {
+					show: {
+						operation: ['chatCompletion'],
+					},
+				},
+			},
 		],
 	};
 
@@ -256,6 +298,8 @@ export class LiteLlmChat implements INodeType {
 					const model = this.getNodeParameter('model', i) as string;
 					const messagesInput = this.getNodeParameter('messages.values', i, []) as any[];
 					const responseFormat = this.getNodeParameter('responseFormat', i) as string;
+					const enableThinking = this.getNodeParameter('enableThinking', i) as boolean;
+					const temperature = this.getNodeParameter('temperature', i) as number;
 
 					const credentials = await this.getCredentials('smartGentLiteLlmApi');
 					
@@ -294,14 +338,28 @@ export class LiteLlmChat implements INodeType {
 						};
 					});
 
-					const completionParams: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
+					const completionParams: any = {
 						model,
 						messages,
 					};
 
+					// Add temperature if set
+					if (temperature !== undefined && temperature !== null) {
+						completionParams.temperature = temperature;
+					}
+
 					// Add response_format if JSON object is selected
 					if (responseFormat === 'json_object') {
 						completionParams.response_format = { type: 'json_object' };
+					}
+
+					// Add thinking configuration if enabled
+					if (enableThinking) {
+						const budgetTokens = this.getNodeParameter('budgetTokens', i) as number;
+						completionParams.thinking = {
+							type: 'enabled',
+							budget_tokens: budgetTokens,
+						};
 					}
 
 					const response = await openai.chat.completions.create(completionParams);
