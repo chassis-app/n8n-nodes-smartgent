@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-smartgent",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "SmartGent custom nodes for n8n - AI-powered automation and intelligent workflow integrations including LiteLLM chat completions",
   "keywords": [
     "n8n-community-node-package",
@@ -74,6 +74,6 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.817.0",
     "@aws-sdk/s3-request-presigner": "^3.817.0",
-    "openai": "^4.103.0"
+    "axios": "^1.9.0"
   }
 }

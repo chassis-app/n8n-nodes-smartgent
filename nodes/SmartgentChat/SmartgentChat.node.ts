@@ -7,11 +7,8 @@ import type {
 	INodeTypeDescription,
 } from 'n8n-workflow';
 
-import { NodeConnectionType } from 'n8n-workflow';
-
-import { NodeOperationError } from 'n8n-workflow';
-
-import OpenAI from 'openai';
+import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
+import axios from 'axios';
 
 export class SmartgentChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -265,14 +262,14 @@ export class SmartgentChat implements INodeType {
 				try {
 					const credentials = await this.getCredentials('smartGentLiteLlmApi');
 					
-					const openai = new OpenAI({
-						baseURL: `${credentials.baseUrl}/v1`,
-						apiKey: credentials.apiKey as string,
+					const response = await axios.get(`${credentials.baseUrl}/v1/models`, {
+						headers: {
+							'Authorization': `Bearer ${credentials.apiKey}`,
+							'Content-Type': 'application/json',
+						},
 					});
 
-					const response = await openai.models.list();
-
-					const models = response.data || [];
+					const models = response.data.data || [];
 					return models.map((model: any) => ({
 						name: model.id,
 						value: model.id,
@@ -300,76 +297,82 @@ export class SmartgentChat implements INodeType {
 					const responseFormat = this.getNodeParameter('responseFormat', i) as string;
 					const enableThinking = this.getNodeParameter('enableThinking', i) as boolean;
 					const temperature = this.getNodeParameter('temperature', i) as number;
-
 					const credentials = await this.getCredentials('smartGentLiteLlmApi');
-					
-					const openai = new OpenAI({
-						baseURL: `${credentials.baseUrl}/v1`,
-						apiKey: credentials.apiKey as string,
-					});
 
-					// Format messages according to the OpenAI API structure
-					const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = messagesInput.map((message) => {
-						if (message.contentType === 'text') {
-							return {
-								role: message.role as 'system' | 'user' | 'assistant',
-								content: message.text,
-							};
-						} else if (message.contentType === 'mixed') {
-							return {
-								role: message.role as 'system' | 'user' | 'assistant',
-								content: [
-									{
-										type: 'text',
-										text: message.promptText,
-									},
-									{
-										type: 'image_url',
-										image_url: {
-											url: message.fileUrl,
-										},
-									},
-								],
-							};
-						}
+				// Format messages according to the chat completion API structure
+				const messages: Array<{
+					role: 'system' | 'user' | 'assistant';
+					content: string | Array<{
+						type: 'text' | 'image_url';
+						text?: string;
+						image_url?: { url: string };
+					}>;
+				}> = messagesInput.map((message) => {
+					if (message.contentType === 'text') {
 						return {
 							role: message.role as 'system' | 'user' | 'assistant',
-							content: message.text || '',
+							content: message.text,
 						};
-					});
-
-					const completionParams: any = {
-						model,
-						messages,
+					} else if (message.contentType === 'mixed') {
+						return {
+							role: message.role as 'system' | 'user' | 'assistant',
+							content: [
+								{
+									type: 'text',
+									text: message.promptText,
+								},
+								{
+									type: 'image_url',
+									image_url: {
+										url: message.fileUrl,
+									},
+								},
+							],
+						};
+					}
+					return {
+						role: message.role as 'system' | 'user' | 'assistant',
+						content: message.text || '',
 					};
+				});
 
-					// Add temperature if set
-					if (temperature !== undefined && temperature !== null) {
-						completionParams.temperature = temperature;
-					}
+				const completionParams: any = {
+					model,
+					messages,
+				};
 
-					// Add response_format if JSON object is selected
-					if (responseFormat === 'json_object') {
-						completionParams.response_format = { type: 'json_object' };
-					}
+				// Add temperature if set
+				if (temperature !== undefined && temperature !== null) {
+					completionParams.temperature = temperature;
+				}
 
-					// Add thinking configuration if enabled
-					if (enableThinking) {
-						const budgetTokens = this.getNodeParameter('budgetTokens', i) as number;
-						completionParams.thinking = {
-							type: 'enabled',
-							budget_tokens: budgetTokens,
-						};
-					}
+				// Add response_format if JSON object is selected
+				if (responseFormat === 'json_object') {
+					completionParams.response_format = { type: 'json_object' };
+				}
 
-					const response = await openai.chat.completions.create(completionParams);
+				// Add thinking configuration if enabled
+				if (enableThinking) {
+					const budgetTokens = this.getNodeParameter('budgetTokens', i) as number;
+					completionParams.thinking = {
+						type: 'enabled',
+						budget_tokens: budgetTokens,
+					};
+				}
 
-					returnData.push({
-						json: JSON.parse(JSON.stringify(response)),
-						pairedItem: {
-							item: i,
-						},
-					});
+				const response = await axios.post(`${credentials.baseUrl}/v1/chat/completions`, completionParams, {
+					headers: {
+						'Authorization': `Bearer ${credentials.apiKey}`,
+						'Content-Type': 'application/json',
+					},
+				});
+
+				returnData.push({
+					json: response.data,
+					pairedItem: {
+						item: i,
+					},
+				});
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {
