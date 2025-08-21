@@ -50,13 +50,15 @@
     "credentials": [
       "dist/credentials/SmartGentApi.credentials.js",
       "dist/credentials/SmartGentLiteLlmApi.credentials.js",
-      "dist/credentials/S3MinIO.credentials.js"
+      "dist/credentials/S3MinIO.credentials.js",
+      "dist/credentials/SmartgentMicrosoftSharePointApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearch.node.js",
       "dist/nodes/SmartGentEnterpriseSearch/SmartGentEnterpriseSearchTool.node.js",
       "dist/nodes/SmartgentChat/SmartgentChat.node.js",
-      "dist/nodes/SmartgentMinio/SmartgentMinio.node.js"
+      "dist/nodes/SmartgentMinio/SmartgentMinio.node.js",
+      "dist/nodes/SmartgentSharePoint/SmartgentSharePoint.node.js"
     ]
   },
   "devDependencies": {

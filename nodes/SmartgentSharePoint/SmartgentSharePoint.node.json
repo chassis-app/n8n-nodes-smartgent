@@ -1,0 +1,6 @@
+{
+	"node": "dist/nodes/SmartgentSharePoint/SmartgentSharePoint.node.js",
+	"credentials": {
+		"smartgentMicrosoftSharePointApi": "dist/credentials/SmartgentMicrosoftSharePointApi.credentials.js"
+	}
+}
