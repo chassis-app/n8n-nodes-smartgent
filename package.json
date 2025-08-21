@@ -63,6 +63,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.23",
+    "@types/qs": "^6.9.15",
     "@typescript-eslint/parser": "~8.32.0",
     "eslint": "^8.57.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.3",
@@ -76,6 +77,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.817.0",
     "@aws-sdk/s3-request-presigner": "^3.817.0",
-    "axios": "^1.9.0"
+    "axios": "^1.9.0",
+    "json-2-csv": "^5.5.1",
+    "qs": "^6.13.0"
   }
 }

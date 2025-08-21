@@ -62,7 +62,7 @@ export class SmartgentSharePoint implements INodeType {
 				type: 'string',
 				default: '/',
 				required: true,
-				description: 'Path to the document library. Use "/" for root/main Documents library, or specify a subfolder path',
+				description: 'Path to the document library. Use "/" for root/main Documents library, or specify a subfolder path.',
 				placeholder: '/',
 				displayOptions: {
 					show: {

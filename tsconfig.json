@@ -25,6 +25,11 @@
 		"credentials/**/*",
 		"nodes/**/*",
 		"nodes/**/*.json",
+		"utils/**/*",
 		"package.json",
+	],
+	"exclude": [
+		"utils/migration-example.ts",
+		"utils/README.md"
 	],
 }
