@@ -1,0 +1,20 @@
+{
+	"node": "n8n-nodes-smartgent.SmartgentSharePointTrigger",
+	"nodeVersion": "1.0",
+	"codex": {
+		"categories": ["Development", "SharePoint", "Trigger"],
+		"subcategories": {
+			"Development": ["Trigger Nodes"],
+			"SharePoint": ["Monitoring"],
+			"Trigger": ["File System"]
+		},
+		"resources": {
+			"primaryDocumentation": [
+				{
+					"url": "https://docs.microsoft.com/en-us/graph/api/resources/sharepoint"
+				}
+			]
+		}
+	}
+}
+
