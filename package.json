@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-smartgent",
-  "version": "0.1.15",
-  "description": "SmartGent custom nodes for n8n - AI-powered automation and intelligent workflow integrations including LiteLLM chat completions",
+  "version": "0.2.0",
+  "description": "SmartGent custom nodes for n8n - AI-powered automation and intelligent workflow integrations including LiteLLM chat completions, SharePoint file monitoring, and enterprise search",
   "keywords": [
     "n8n-community-node-package",
     "n8n",
@@ -18,7 +18,11 @@
     "search",
     "langchain",
     "tool",
-    "intelligent-workflows"
+    "intelligent-workflows",
+    "sharepoint",
+    "trigger",
+    "file-monitoring",
+    "microsoft-graph"
   ],
   "license": "MIT",
   "homepage": "https://github.com/chassis-app/n8n-nodes-smartgent",
@@ -28,7 +32,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/chassis-app/n8n-nodes-smartgent.git"
+    "url": "git+https://github.com/chassis-app/n8n-nodes-smartgent.git"
   },
   "engines": {
     "node": ">=20.15"
