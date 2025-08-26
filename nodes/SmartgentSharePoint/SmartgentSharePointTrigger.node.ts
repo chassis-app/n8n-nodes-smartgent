@@ -4,7 +4,6 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 	IPollFunctions,
-	INodePropertyOptions,
 	IHttpRequestOptions,
 } from 'n8n-workflow';
 
@@ -466,4 +465,5 @@ export class SmartgentSharePointTrigger implements INodeType {
 		return Buffer.from(response);
 	}
 }
+
 
