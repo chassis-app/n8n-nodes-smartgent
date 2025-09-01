@@ -61,8 +61,8 @@ export class SmartgentSharePointTrigger implements INodeType {
 				type: 'string',
 				default: '/',
 				required: true,
-				description: 'Path to the folder to monitor. Use "/" for root/main Documents library, or specify a subfolder path.',
-				placeholder: '/',
+				description: 'Path to the folder to monitor. Use "/" for root Documents library, or specify a subfolder path like "MyFolder" or "ParentFolder/ChildFolder". Paths are relative to the Documents library root.',
+				placeholder: 'MyFolder/SubFolder',
 			},
 			{
 				displayName: 'Poll Interval',
@@ -118,20 +118,28 @@ export class SmartgentSharePointTrigger implements INodeType {
 		const includeSubfolders = additionalOptions.includeSubfolders as boolean;
 		const downloadContent = additionalOptions.downloadContent as boolean;
 
+		// Check if this is a test execution (when user clicks "Fetch Test Event")
+		const isTestMode = this.getMode() === 'manual';
+
 		try {
 			const credentials = await this.getCredentials('smartgentMicrosoftSharePointApi');
+			console.log(`SharePoint Trigger: Starting ${isTestMode ? 'TEST' : 'POLL'} for folder path: "${folderPath}"`);
 
 			// Get access token
 			const tokenResponse = await SmartgentSharePointTrigger.getAccessToken(credentials, this);
 			const accessToken = tokenResponse.access_token;
+			console.log('SharePoint Trigger: Successfully obtained access token');
 
 			// Get site ID
 			const siteId = await SmartgentSharePointTrigger.getSiteId(credentials.siteUrl as string, accessToken, this);
+			console.log(`SharePoint Trigger: Site ID: ${siteId}`);
 
 			// Get drive ID
 			const driveId = await SmartgentSharePointTrigger.getDriveId(siteId, accessToken, this);
+			console.log(`SharePoint Trigger: Drive ID: ${driveId}`);
 
 			// Get current files
+			console.log(`SharePoint Trigger: Listing documents for path: "${folderPath}", includeSubfolders: ${includeSubfolders}`);
 			const currentFiles = await SmartgentSharePointTrigger.listDocuments(
 				driveId, 
 				folderPath, 
@@ -139,14 +147,18 @@ export class SmartgentSharePointTrigger implements INodeType {
 				{ includeSubfolders },
 				this
 			);
+			console.log(`SharePoint Trigger: Found ${currentFiles.length} total files`);
+			console.log('SharePoint Trigger: Files found:', currentFiles.map(f => ({ name: f.name, id: f.id })));
 
 			// Filter by file extensions if specified
 			let filteredFiles = currentFiles;
 			if (fileExtensions.length > 0) {
+				console.log(`SharePoint Trigger: Filtering by extensions: ${fileExtensions.join(', ')}`);
 				filteredFiles = currentFiles.filter(file => {
 					const fileExt = file.name.split('.').pop()?.toLowerCase();
 					return fileExt && fileExtensions.includes(fileExt);
 				});
+				console.log(`SharePoint Trigger: After extension filtering: ${filteredFiles.length} files`);
 			}
 
 			// Get last poll data
@@ -158,11 +170,26 @@ export class SmartgentSharePointTrigger implements INodeType {
 
 			let newOrModifiedFiles: any[] = [];
 
-			if (!lastPollTime) {
+			if (isTestMode) {
+				// In test mode, return some files for demonstration purposes
+				console.log('SharePoint Trigger: Running in test mode - will return existing files for demo');
+				if (filteredFiles.length > 0) {
+					// Return a random selection of files to make testing more realistic
+					const maxFiles = Math.min(3, filteredFiles.length);
+					const shuffled = [...filteredFiles].sort(() => 0.5 - Math.random());
+					newOrModifiedFiles = shuffled.slice(0, maxFiles);
+					console.log(`SharePoint Trigger: Test mode - returning ${newOrModifiedFiles.length} random files for testing`);
+					console.log('SharePoint Trigger: NOTE - These are existing files shown for testing. In normal mode, only NEW/MODIFIED files would trigger.');
+				} else {
+					console.log('SharePoint Trigger: Test mode - no files found in folder');
+				}
+			} else if (!lastPollTime) {
 				// First poll - don't trigger for existing files unless specified
+				console.log('SharePoint Trigger: First poll - not triggering for existing files');
 				newOrModifiedFiles = [];
 			} else {
 				const lastPollDate = new Date(lastPollTime);
+				console.log(`SharePoint Trigger: Checking for changes since ${lastPollTime}`);
 				
 				for (const file of filteredFiles) {
 					const fileModifiedDate = new Date(file.lastModifiedDateTime);
@@ -172,27 +199,63 @@ export class SmartgentSharePointTrigger implements INodeType {
 						// File added - new file that wasn't in last poll
 						if (!lastKnownFile) {
 							newOrModifiedFiles.push(file);
+							console.log(`SharePoint Trigger: New file detected: ${file.name}`);
 						}
 					} else if (event === 'fileModified') {
 						// File modified - file was modified since last poll and was already known
 						if (lastKnownFile && fileModifiedDate > lastPollDate) {
 							newOrModifiedFiles.push(file);
+							console.log(`SharePoint Trigger: Modified file detected: ${file.name}`);
 						}
 					} else if (event === 'fileAddedOrModified') {
 						// File added or modified
 						if (!lastKnownFile || fileModifiedDate > lastPollDate) {
 							newOrModifiedFiles.push(file);
+							console.log(`SharePoint Trigger: New or modified file detected: ${file.name}`);
 						}
 					}
 				}
 			}
 
-			// Update poll data
-			pollData.lastPollTime = currentPollTime;
-			pollData.lastKnownFiles = filteredFiles;
+			// Update poll data (but not in test mode)
+			if (!isTestMode) {
+				pollData.lastPollTime = currentPollTime;
+				pollData.lastKnownFiles = filteredFiles;
+			}
 
+			console.log(`SharePoint Trigger: Found ${newOrModifiedFiles.length} new/modified files to trigger on`);
+			
 			if (newOrModifiedFiles.length === 0) {
-				return null; // No new data
+				if (isTestMode) {
+					console.log('SharePoint Trigger: Test mode - no files found in folder, providing helpful message');
+					// In test mode, provide a helpful message when no files are found
+					return [[{
+						json: {
+							event: 'test',
+							trigger: 'smartgentSharePointTrigger',
+							testMode: true,
+							testNote: 'This is a TEST execution. No files were found in the specified folder.',
+							message: `TEST MODE: No files found in folder path: "${folderPath}". Please check: 1) The folder path is correct, 2) There are files in the folder, 3) Your credentials have access to the folder.`,
+							folderPath,
+							totalFilesFound: filteredFiles.length,
+							debug: {
+								originalFilesFound: currentFiles.length,
+								afterExtensionFilter: filteredFiles.length,
+								fileExtensionsFilter: fileExtensions.length > 0 ? fileExtensions : 'none'
+							},
+							timestamp: new Date().toISOString(),
+							nextSteps: [
+								'1. Verify the folder path exists in SharePoint',
+								'2. Check if there are actually files in that folder',
+								'3. Ensure your app registration has proper permissions',
+								'4. Try using "/" to test the root folder first'
+							]
+						}
+					}]];
+				} else {
+					console.log('SharePoint Trigger: No new/modified files found, returning null (no trigger)');
+					return null; // No new data
+				}
 			}
 
 			// Prepare return data
@@ -201,8 +264,13 @@ export class SmartgentSharePointTrigger implements INodeType {
 			for (const file of newOrModifiedFiles) {
 				let executionData: INodeExecutionData = {
 					json: {
-						event,
+						event: isTestMode ? 'test' : event,
 						trigger: 'smartgentSharePointTrigger',
+						...(isTestMode && { 
+							testMode: true,
+							testNote: 'This is a TEST execution showing existing files. In normal operation, only NEW or MODIFIED files will trigger this workflow.',
+							testExecutionTime: currentPollTime
+						}),
 						file: {
 							id: file.id,
 							name: file.name,
@@ -406,19 +474,30 @@ export class SmartgentSharePointTrigger implements INodeType {
 	private static async getDocumentsFromFolder(driveId: string, folderPath: string, token: string, context: IPollFunctions): Promise<any[]> {
 		let url: string;
 		
-		const decodedPath = decodeURIComponent(folderPath);
+		// Decode URL-encoded path and normalize
+		const decodedPath = decodeURIComponent(folderPath).trim();
+		console.log(`SharePoint Trigger: getDocumentsFromFolder - Original path: "${folderPath}", Decoded: "${decodedPath}"`);
 		
-		if (folderPath === '/' || folderPath === '' || folderPath === '/root' || 
-			folderPath === '/Shared Documents' || folderPath === 'Shared Documents' ||
-			folderPath === '/Shared%20Documents' || folderPath === 'Shared%20Documents' ||
-			decodedPath === '/Shared Documents' || decodedPath === 'Shared Documents') {
+		// Check if this is the root folder
+		if (this.isRootPath(decodedPath)) {
 			url = `https://graph.microsoft.com/v1.0/drives/${driveId}/root/children`;
+			console.log('SharePoint Trigger: Using root path URL');
 		} else {
-			const cleanPath = folderPath.startsWith('/') ? folderPath.substring(1) : folderPath;
+			// Clean and validate the path
+			const cleanPath = this.cleanFolderPath(decodedPath);
+			console.log(`SharePoint Trigger: Cleaned path: "${cleanPath}"`);
+			
+			if (!cleanPath) {
+				throw new ApplicationError(`Invalid folder path: ${folderPath}`);
+			}
+			
+			// Use the clean path to construct the URL
 			url = `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${cleanPath}:/children`;
+			console.log('SharePoint Trigger: Using subfolder path URL');
 		}
 
 		url += '?$select=id,name,lastModifiedDateTime,size,file,folder,webUrl,@microsoft.graph.downloadUrl';
+		console.log(`SharePoint Trigger: Final API URL: ${url}`);
 
 		const options: IHttpRequestOptions = {
 			method: 'GET',
@@ -429,26 +508,164 @@ export class SmartgentSharePointTrigger implements INodeType {
 			json: true,
 		};
 
-		const response = await context.helpers.httpRequest(options);
-		
-		// Filter only files (not folders)
-		const documents = response.value.filter((item: any) => item.file !== undefined);
-		
-		return documents.map((doc: any) => ({
-			id: doc.id,
-			name: doc.name,
-			lastModifiedDateTime: doc.lastModifiedDateTime,
-			size: doc.size,
-			webUrl: doc.webUrl,
-			downloadUrl: doc['@microsoft.graph.downloadUrl'],
-			mimeType: doc.file?.mimeType,
-		}));
+		try {
+			const response = await context.helpers.httpRequest(options);
+			console.log(`SharePoint Trigger: API Response status: ${response ? 'Success' : 'No response'}`);
+			
+			// Ensure response has the expected structure
+			if (!response || !response.value || !Array.isArray(response.value)) {
+				console.log('SharePoint Trigger: Invalid response structure:', response);
+				throw new ApplicationError(`Invalid response from SharePoint API for path: ${folderPath}`);
+			}
+			
+			console.log(`SharePoint Trigger: Response contains ${response.value.length} items`);
+			
+			// Log all items for debugging
+			response.value.forEach((item: any, index: number) => {
+				console.log(`SharePoint Trigger: Item ${index}: ${item.name} (${item.file ? 'file' : 'folder'})`);
+			});
+			
+			// Filter only files (not folders)
+			const documents = response.value.filter((item: any) => item.file !== undefined);
+			console.log(`SharePoint Trigger: Filtered to ${documents.length} files`);
+			
+			return documents.map((doc: any) => ({
+				id: doc.id,
+				name: doc.name,
+				lastModifiedDateTime: doc.lastModifiedDateTime,
+				size: doc.size,
+				webUrl: doc.webUrl,
+				downloadUrl: doc['@microsoft.graph.downloadUrl'],
+				mimeType: doc.file?.mimeType,
+			}));
+		} catch (error: any) {
+			// Provide more specific error information
+			if (error.response?.status === 404) {
+				throw new ApplicationError(`Folder not found: ${folderPath}. Please verify the path exists in SharePoint.`);
+			} else if (error.response?.status === 403) {
+				throw new ApplicationError(`Access denied to folder: ${folderPath}. Please check your permissions.`);
+			} else if (error.response?.status === 401) {
+				throw new ApplicationError(`Authentication failed. Please check your SharePoint credentials.`);
+			}
+			throw new ApplicationError(`Failed to access folder ${folderPath}: ${error.message}`);
+		}
 	}
 
 	private static async getDocumentsFromSubfolders(driveId: string, folderPath: string, token: string, context: IPollFunctions): Promise<any[]> {
-		// This is a simplified implementation - in a production environment,
-		// you might want to implement a more sophisticated recursive folder traversal
-		return [];
+		try {
+			const allFiles: any[] = [];
+			const folders = await this.getFoldersFromPath(driveId, folderPath, token, context);
+			
+			for (const folder of folders) {
+				// Get files from this subfolder
+				const folderFiles = await this.getDocumentsFromFolder(driveId, folder.path, token, context);
+				allFiles.push(...folderFiles);
+				
+				// Recursively get files from nested subfolders
+				const nestedFiles = await this.getDocumentsFromSubfolders(driveId, folder.path, token, context);
+				allFiles.push(...nestedFiles);
+			}
+			
+			return allFiles;
+		} catch (error) {
+			// Don't fail the entire operation if subfolder traversal fails
+			console.warn(`Failed to get documents from subfolders of ${folderPath}:`, error);
+			return [];
+		}
+	}
+
+	/**
+	 * Check if the given path represents the root folder
+	 */
+	private static isRootPath(path: string): boolean {
+		const normalizedPath = path.toLowerCase().trim();
+		return (
+			normalizedPath === '/' ||
+			normalizedPath === '' ||
+			normalizedPath === '/root' ||
+			normalizedPath === '/shared documents' ||
+			normalizedPath === 'shared documents' ||
+			normalizedPath === '/shared%20documents' ||
+			normalizedPath === 'shared%20documents'
+		);
+	}
+
+	/**
+	 * Clean and validate a folder path
+	 */
+	private static cleanFolderPath(path: string): string {
+		if (!path || path.trim() === '') {
+			return '';
+		}
+
+		// Remove leading and trailing slashes/whitespace
+		let cleanPath = path.trim();
+		
+		// Remove leading slash if present
+		if (cleanPath.startsWith('/')) {
+			cleanPath = cleanPath.substring(1);
+		}
+		
+		// Remove trailing slash if present
+		if (cleanPath.endsWith('/')) {
+			cleanPath = cleanPath.substring(0, cleanPath.length - 1);
+		}
+		
+		// Validate that the path doesn't contain invalid characters
+		const invalidChars = /[<>:"|?*]/;
+		if (invalidChars.test(cleanPath)) {
+			throw new ApplicationError(`Invalid characters in folder path: ${path}`);
+		}
+		
+		return cleanPath;
+	}
+
+	/**
+	 * Get folders from a specific path for recursive traversal
+	 */
+	private static async getFoldersFromPath(driveId: string, folderPath: string, token: string, context: IPollFunctions): Promise<Array<{name: string, path: string}>> {
+		let url: string;
+		
+		const decodedPath = decodeURIComponent(folderPath).trim();
+		
+		if (this.isRootPath(decodedPath)) {
+			url = `https://graph.microsoft.com/v1.0/drives/${driveId}/root/children`;
+		} else {
+			const cleanPath = this.cleanFolderPath(decodedPath);
+			if (!cleanPath) {
+				return [];
+			}
+			url = `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${cleanPath}:/children`;
+		}
+
+		url += '?$select=id,name,folder&$filter=folder ne null';
+
+		const options: IHttpRequestOptions = {
+			method: 'GET',
+			url,
+			headers: {
+				'Authorization': `Bearer ${token}`,
+			},
+			json: true,
+		};
+
+		try {
+			const response = await context.helpers.httpRequest(options);
+			
+			if (!response || !response.value || !Array.isArray(response.value)) {
+				return [];
+			}
+			
+			return response.value
+				.filter((item: any) => item.folder !== undefined)
+				.map((folder: any) => ({
+					name: folder.name,
+					path: this.isRootPath(decodedPath) ? folder.name : `${this.cleanFolderPath(decodedPath)}/${folder.name}`
+				}));
+		} catch (error) {
+			console.warn(`Failed to get folders from path ${folderPath}:`, error);
+			return [];
+		}
 	}
 
 	private static async downloadDocument(driveId: string, documentId: string, token: string, context: IPollFunctions): Promise<Buffer> {
