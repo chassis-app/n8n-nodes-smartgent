@@ -7,6 +7,8 @@ import type {
 } from 'n8n-workflow';
 
 import { NodeConnectionType, NodeOperationError, ApplicationError } from 'n8n-workflow';
+import { moveFile } from '../../utils/sharepoint';
+import { MoveFileRequest } from '../../utils/types';
 
 export class SmartgentSharePoint implements INodeType {
 	description: INodeTypeDescription = {
@@ -53,6 +55,12 @@ export class SmartgentSharePoint implements INodeType {
 						description: 'Download a document content',
 						action: 'Download document content',
 					},
+					{
+						name: 'Move File',
+						value: 'moveFile',
+						description: 'Move a file to a different folder',
+						action: 'Move file to folder',
+					},
 				],
 				default: 'listDocuments',
 			},
@@ -80,6 +88,33 @@ export class SmartgentSharePoint implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['getDocument', 'downloadDocument'],
+					},
+				},
+			},
+			{
+				displayName: 'Source Document ID',
+				name: 'sourceDocumentId',
+				type: 'string',
+				default: '',
+				required: true,
+				description: 'The ID of the document to move',
+				displayOptions: {
+					show: {
+						operation: ['moveFile'],
+					},
+				},
+			},
+			{
+				displayName: 'Destination Folder Path',
+				name: 'destinationFolderPath',
+				type: 'string',
+				default: '',
+				required: true,
+				description: 'The path of the destination folder (e.g., "/NewFolder" or "ParentFolder/SubFolder")',
+				placeholder: '/NewFolder',
+				displayOptions: {
+					show: {
+						operation: ['moveFile'],
 					},
 				},
 			},
@@ -187,10 +222,10 @@ export class SmartgentSharePoint implements INodeType {
 					case 'downloadDocument':
 						const downloadDocumentId = this.getNodeParameter('documentId', i) as string;
 						const driveIdForDownload = await SmartgentSharePoint.getDriveId(siteId, accessToken, this);
-						
+
 						const downloadContent = await SmartgentSharePoint.downloadDocument(driveIdForDownload, downloadDocumentId, accessToken, this);
 						const downloadDocumentDetails = await SmartgentSharePoint.getDocument(driveIdForDownload, downloadDocumentId, accessToken, this);
-						
+
 						executionData = {
 							json: {
 								operation: 'downloadDocument',
@@ -206,6 +241,43 @@ export class SmartgentSharePoint implements INodeType {
 									mimeType: downloadDocumentDetails.mimeType || 'application/octet-stream',
 									fileName: downloadDocumentDetails.name,
 								},
+							},
+							pairedItem: { item: i },
+						};
+						break;
+
+					case 'moveFile':
+						const sourceDocumentId = this.getNodeParameter('sourceDocumentId', i) as string;
+						const destinationFolderPath = this.getNodeParameter('destinationFolderPath', i) as string;
+						const driveIdForMove = await SmartgentSharePoint.getDriveId(siteId, accessToken, this);
+
+						// Get the destination folder ID
+						const destinationFolderId = await SmartgentSharePoint.getFolderId(driveIdForMove, destinationFolderPath, accessToken, this);
+
+						// Move the file
+						const moveRequest: MoveFileRequest = {
+							driveId: driveIdForMove,
+							fileId: sourceDocumentId,
+							destinationFolderId,
+							token: accessToken,
+						};
+
+						await moveFile(moveRequest);
+
+						// Get the moved file details
+						const movedFileDetails = await SmartgentSharePoint.getDocument(driveIdForMove, sourceDocumentId, accessToken, this);
+
+						executionData = {
+							json: {
+								operation: 'moveFile',
+								siteId,
+								driveId: driveIdForMove,
+								sourceDocumentId,
+								destinationFolderPath,
+								destinationFolderId,
+								movedFile: movedFileDetails,
+								success: true,
+								timestamp: new Date().toISOString(),
 							},
 							pairedItem: { item: i },
 						};
@@ -506,5 +578,44 @@ export class SmartgentSharePoint implements INodeType {
 
 		const response = await context.helpers.httpRequest(options);
 		return Buffer.from(response);
+	}
+
+	private static async getFolderId(driveId: string, folderPath: string, token: string, context: IExecuteFunctions): Promise<string> {
+		let url: string;
+
+		// Handle root folder
+		if (folderPath === '/' || folderPath === '' || folderPath === '/root') {
+			url = `https://graph.microsoft.com/v1.0/drives/${driveId}/root`;
+		} else {
+			// Clean the path (remove leading slash if present)
+			const cleanPath = folderPath.startsWith('/') ? folderPath.substring(1) : folderPath;
+			url = `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${cleanPath}`;
+		}
+
+		const options: IHttpRequestOptions = {
+			method: 'GET',
+			url,
+			headers: {
+				'Authorization': `Bearer ${token}`,
+			},
+			json: true,
+		};
+
+		try {
+			const response = await context.helpers.httpRequest(options);
+
+			if (!response.id) {
+				throw new ApplicationError(`Could not find folder: ${folderPath}`);
+			}
+
+			return response.id;
+		} catch (error: any) {
+			if (error.response?.status === 404) {
+				throw new ApplicationError(`Destination folder not found: ${folderPath}. Please verify the path exists in SharePoint.`);
+			} else if (error.response?.status === 403) {
+				throw new ApplicationError(`Access denied to destination folder: ${folderPath}. Please check your permissions.`);
+			}
+			throw new ApplicationError(`Failed to access destination folder ${folderPath}: ${error.message}`);
+		}
 	}
 }
