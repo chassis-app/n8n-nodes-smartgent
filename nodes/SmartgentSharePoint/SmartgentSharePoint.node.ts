@@ -4,9 +4,10 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 	IHttpRequestOptions,
+	NodeConnectionType,
 } from 'n8n-workflow';
 
-import { NodeConnectionType, NodeOperationError, ApplicationError } from 'n8n-workflow';
+import { NodeOperationError, ApplicationError } from 'n8n-workflow';
 import { moveFile } from '../../utils/sharepoint';
 import { MoveFileRequest } from '../../utils/types';
 
@@ -22,8 +23,8 @@ export class SmartgentSharePoint implements INodeType {
 		defaults: {
 			name: 'Smartgent SharePoint',
 		},
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
+		inputs: ['main' as NodeConnectionType],
+		outputs: ['main' as NodeConnectionType],
 		credentials: [
 			{
 				name: 'smartgentMicrosoftSharePointApi',

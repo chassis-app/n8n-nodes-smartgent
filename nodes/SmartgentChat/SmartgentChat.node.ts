@@ -5,9 +5,10 @@ import type {
 	INodePropertyOptions,
 	INodeType,
 	INodeTypeDescription,
+	NodeConnectionType,
 } from 'n8n-workflow';
 
-import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import axios from 'axios';
 
 export class SmartgentChat implements INodeType {
@@ -15,15 +16,15 @@ export class SmartgentChat implements INodeType {
 		displayName: 'SmartGent Chat',
 		name: 'smartgentChat',
 		icon: 'file:smartgent.svg',
-		group: ['ai'],
+		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["model"]}}',
 		description: 'Interact with SmartGent chat completions API',
 		defaults: {
 			name: 'SmartGent Chat',
 		},
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
+		inputs: ['main' as NodeConnectionType],
+		outputs: ['main' as NodeConnectionType],
 		credentials: [
 			{
 				name: 'smartGentLiteLlmApi',

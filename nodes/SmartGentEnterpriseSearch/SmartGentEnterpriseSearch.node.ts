@@ -6,8 +6,9 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 	IHttpRequestOptions,
+	NodeConnectionType,
 } from 'n8n-workflow';
-import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 
 export class SmartGentEnterpriseSearch implements INodeType {
 	description: INodeTypeDescription = {
@@ -21,8 +22,8 @@ export class SmartGentEnterpriseSearch implements INodeType {
 		defaults: {
 			name: 'SmartGent Enterprise Search',
 		},
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
+		inputs: ['main' as NodeConnectionType],
+		outputs: ['main' as NodeConnectionType],
 		credentials: [
 			{
 				name: 'smartGentApi',

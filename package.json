@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-smartgent",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "SmartGent custom nodes for n8n - AI-powered automation and intelligent workflow integrations including LiteLLM chat completions, SharePoint file monitoring, and enterprise search",
   "keywords": [
     "n8n-community-node-package",

@@ -5,9 +5,10 @@ import type {
 	INodeTypeDescription,
 	IPollFunctions,
 	IHttpRequestOptions,
+	NodeConnectionType,
 } from 'n8n-workflow';
 
-import { NodeConnectionType, NodeOperationError, ApplicationError } from 'n8n-workflow';
+import { NodeOperationError, ApplicationError } from 'n8n-workflow';
 
 export class SmartgentSharePointTrigger implements INodeType {
 	description: INodeTypeDescription = {
@@ -22,7 +23,7 @@ export class SmartgentSharePointTrigger implements INodeType {
 			name: 'Smartgent SharePoint Trigger',
 		},
 		inputs: [],
-		outputs: [NodeConnectionType.Main],
+		outputs: ['main' as NodeConnectionType],
 		credentials: [
 			{
 				name: 'smartgentMicrosoftSharePointApi',
